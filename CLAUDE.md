@@ -24,3 +24,4 @@
 2. download all the relevant files listed above and analyse their contents.
 3. create the app structure capable of saving to localstoreage with multiple selection tools
 4. document everything you do in CLAUDE_log.md complete with code snippets. Read the TODO section from end of file. Work on the tasks and write new sections to `CLAUDE_log.md` accordingly.
+

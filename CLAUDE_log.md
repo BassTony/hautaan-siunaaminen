@@ -465,9 +465,15 @@ Dev server confirmed at `http://localhost:5173/hautaan-siunaaminen/`.
 | Hymn numbers | Static list; no link to audio/score | virsikirja.fi links are external; out of scope for print tool |
 | Multi-word names | Only first word conjugated | Finnish names are conjugated by first given name in liturgical usage |
 
-## TODO
+## 15. Git repository initialization
 
-- [ ] initialize a git repo and push it to GitHub with the following instructions:
+```sh
+git init
+git add -A
+git commit -m "Initial commit: hautaan siunaaminen liturgy planning app"
+```
+
+The remote has not been pushed yet. To publish to GitHub, run:
 
 ```sh
 git remote add origin https://github.com/BassTony/hautaan-siunaaminen.git
@@ -475,15 +481,146 @@ git branch -M main
 git push -u origin main
 ```
 
-- [ ] make `Antifoni toistetaan` repeat the text in previous `Antifoni`. Also make `Antifoni` optional altogether.
-- [ ] label `10. Virsi` as optional and visible only with a checkbox, initially not visible
-- [ ] `7. Raamatunluku ja puhe` selections should be mutually excluding by default. Selecting multiple ones should be enabled only by a checkbox.
-- [ ] include new unnumbered sections before section `1. Virsi`:
-  - [ ] `Alkusoitto`, where user can select from the most liked classical instrumental compositions that are being used in funerals, like `Bach: Air` and `Albinoni: Adagio`. Include at least 6 most used pieces that you can find in Finnish descriptions of funerals.
-  - [ ] `Kukkien laskeminen`, where a multiple selection selects from two options: between `Alkusoitto` and `1. Virsi`, OR: after `14. Päätösmusiikki`.
-- [ ] include new unnumbered sections after `14. Päätösmusiikki`:
-  - [ ] `Saattomusiikki`, which is similar to `Alkusoitto`. Handle this section in the same way as `Alkusoitto`.
-  - [ ] Make `Saattomusiikki` optional, and in the case of disabling `Saattomusiikki` add all options in `Saattomusiikki` to `14. Päätösmusiikki`.
-- [ ] Have a selection in the beginning for the burial type with two options: `Arkkuhautaus` and `Tuhkaus`. In case of `Tuhkaus` hide sections `15. Rukous haudalla` and `16. Hautaan laskeminen`.
-- [ ] in `9. Siunaussanat` user should be able to select `Siunaussanat lausutaan haudalla`, and the selected texts will appear in section `16. Hautaan laskeminen`. When printing, the "Siunaussanat" texts will be visible only at the end, in section `16. Hautaan laskeminen`.
-- [ ] At `16. Rukous haudalla`, add an option for a song as `1. Virsi`
+---
+
+## 16. Feature additions (second iteration)
+
+### Classical music data (`src/data/classicalMusic.ts`)
+
+A new data file was added for instrumental pieces commonly played at Finnish Lutheran funerals. The `ClassicalPiece` interface:
+
+```typescript
+interface ClassicalPiece {
+  id: string;
+  composer: string;
+  title: string;
+}
+```
+
+Ten pieces included:
+
+| id | Composer | Title |
+| -- | -------- | ----- |
+| `bach-air` | J. S. Bach | Air (BWV 1068) |
+| `albinoni-adagio` | Albinoni / Giazotto | Adagio g-molli |
+| `barber-adagio` | Samuel Barber | Adagio jousiorkesterille, op. 11 |
+| `handel-sarabande` | G. F. Handel | Sarabande d-molli (HWV 437) |
+| `pachelbel-canon` | Johann Pachelbel | Kaanon D-duuri |
+| `grieg-aase` | Edvard Grieg | Åsen kuolema (Peer Gynt, op. 46) |
+| `sibelius-finlandia-hymni` | Jean Sibelius | Finlandia-hymni (op. 26) |
+| `faure-pavane` | Gabriel Fauré | Pavane, op. 50 |
+| `schubert-ave-maria` | Franz Schubert | Ave Maria, D. 839 |
+| `bach-gounod-ave-maria` | Bach / Gounod | Ave Maria |
+
+A `ClassicalSelector` component mirrors the `HymnSelector` but uses `CLASSICAL_PIECES` as its options list and formats labels as `{composer}: {title}`.
+
+### New `LiturgySelections` fields (`src/types.ts`)
+
+```typescript
+burialType: 'arkku' | 'tuhka';
+alkusoitto: HymnChoice;
+kukkienlaskeminen: 'before' | 'after' | 'none';
+includeAntifoni: boolean;
+scripture7multiSelect: boolean;
+siunaussanatHaudalla: boolean;
+includeVirsi10: boolean;
+includeSaattomusiikki: boolean;
+saattomusiikki: HymnChoice;
+hymnHaudalla: HymnChoice;
+```
+
+### Burial type selector
+
+A mode toggle placed directly after the event info card:
+
+```
+[ Arkkuhautaus ]  [ Tuhkaus ]
+```
+
+When `burialType === 'tuhka'`, sections 15 (Rukous haudalla) and 16 (Hautaan laskeminen) are not rendered — both in the editor and in the print view. An info note explains this to the user.
+
+### Unnumbered sections before 1. Virsi
+
+**Alkusoitto** — `ClassicalSelector` + free-text input. Appears in the print view as an unnumbered block before the main service.
+
+**Kukkien laskeminen** — Two toggle buttons (not radio buttons, so both can be deactivated):
+
+- `before` — flower laying appears between Alkusoitto and 1. Virsi in print
+- `after` — flower laying appears after 14. Päätösmusiikki in print
+- `none` — omitted
+
+### Antifoni made optional (section 5)
+
+A checkbox `Sisällytetään antifoni` controls `includeAntifoni`. When enabled:
+
+- The antifon selector and text appear before the psalm
+- After the psalm (and optional Pieni kunnia), the rubric "Antifoni toistetaan:" is followed by the **full antifon text** — not just the rubric label
+
+```tsx
+{sel.includeAntifoni && (
+  <div className="antifoni-repeat">
+    <Rubric text="Antifoni toistetaan:" />
+    <SelectedText text={ANTIFONI[sel.antifoni].text} />
+  </div>
+)}
+```
+
+The print view mirrors this: when `includeAntifoni` is false, both the opening antifon and the "toistetaan" block are omitted.
+
+### Section 7: mutually exclusive scripture by default
+
+Scripture readings are now single-select by default. A checkbox `Salli useamman raamatunkohdan valinta` sets `scripture7multiSelect`:
+
+```typescript
+onClick={() => {
+  if (sel.scripture7multiSelect) {
+    // toggle inclusion
+    const next = sel.scripture7.includes(i)
+      ? sel.scripture7.filter(x => x !== i)
+      : [...sel.scripture7, i];
+    update('scripture7', next.length ? next : [i]);
+  } else {
+    // single select
+    update('scripture7', [i]);
+  }
+}}
+```
+
+When switching from multi back to single, all but the first selected reading are dropped.
+
+### Section 9: Siunaussanat lausutaan haudalla
+
+A checkbox `Siunaussanat lausutaan haudalla (kohta 16)` sets `siunaussanatHaudalla`. Effect:
+
+- **In the editor**: the blessing text is hidden under section 9; an info note says it will appear in section 16.
+- **In the print view** (section 9): shows only the rubric "Siunaussanat lausutaan haudalla (kohta 16)."
+- **In the print view** (section 16): the intro sentence and blessing words are rendered in full.
+
+The options selectors (intro + siunaussanat) remain visible in section 9 so the priest can still choose which texts to use.
+
+### Section 10: Virsi made optional
+
+A checkbox `Sisällytetään virsi 10` controls `includeVirsi10`. Default is `false` (hidden). The `HymnSelector` is only rendered when the checkbox is ticked. In the print view, section 10 is skipped entirely when `includeVirsi10` is false.
+
+### Saattomusiikki (after 14. Päätösmusiikki)
+
+An unnumbered section below 14. Päätösmusiikki. Behaviour:
+
+- **When `includeSaattomusiikki` is false** (default): the `ClassicalSelector` for `saattomusiikki` appears inside section 14 itself, labelled "Saattomusiikki (instrumentaali)". In print, any selected piece appears as a second line under 14.
+- **When `includeSaattomusiikki` is true**: the classical selector moves to its own "Saattomusiikki" block below 14, and appears as a separate unnumbered entry in print.
+
+### Section 15: hymn at the graveside
+
+A `HymnSelector` ("Virsi haudalla") is added inside section 15 (Rukous haudalla), displayed when `includeHaudalla` is true. In print view it appears before the prayer text.
+
+### Build after changes
+
+```sh
+$ npm run build
+✓ built in 1.46s
+dist/index.html                   0.76 kB
+dist/assets/index-[hash].css      8.52 kB
+dist/assets/index-[hash].js     260.53 kB
+```
+
+All changes committed in two commits on `main`.

@@ -573,7 +573,11 @@ function SaveDialog({
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
 export default function App() {
-  const [sel, setSel] = useState<LiturgySelections>(() => loadAutoSave() ?? DEFAULT);
+  const [sel, setSel] = useState<LiturgySelections>(() => {
+    const saved = loadAutoSave();
+    // Merge with DEFAULT so any fields missing from older saves get a default value
+    return saved ? { ...DEFAULT, ...saved } : DEFAULT;
+  });
   const [saves, setSaves] = useState<SaveFile[]>(() => loadSaves());
   const [showPrint, setShowPrint] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
@@ -611,7 +615,7 @@ export default function App() {
   function handleLoad(id: string) {
     const found = saves.find(s => s.id === id);
     if (found) {
-      setSel(found.selections);
+      setSel({ ...DEFAULT, ...found.selections });
       setShowSaveDialog(false);
     }
   }

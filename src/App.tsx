@@ -573,6 +573,17 @@ function SaveDialog({
 // ─── Main App ─────────────────────────────────────────────────────────────────
 
 export default function App() {
+  const [dark, setDark] = useState<boolean>(() => {
+    const stored = localStorage.getItem('hautaan-siunaaminen-theme');
+    if (stored) return stored === 'dark';
+    return window.matchMedia('(prefers-color-scheme: dark)').matches;
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    localStorage.setItem('hautaan-siunaaminen-theme', dark ? 'dark' : 'light');
+  }, [dark]);
+
   const [sel, setSel] = useState<LiturgySelections>(() => {
     const saved = loadAutoSave();
     // Merge with DEFAULT so any fields missing from older saves get a default value
@@ -649,6 +660,9 @@ export default function App() {
           <h1 className="app-title">Hautaan siunaaminen</h1>
           <p className="app-subtitle">Liturgian suunnittelutyökalu</p>
           <div className="header-actions">
+            <button className="btn-theme-toggle" onClick={() => setDark(d => !d)}>
+              {dark ? 'Vaalea tila' : 'Tumma tila'}
+            </button>
             <button className="btn-secondary" onClick={() => setShowSaveDialog(true)}>
               Tallenna / lataa
             </button>

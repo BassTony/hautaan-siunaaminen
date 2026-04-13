@@ -85,33 +85,41 @@ body {
   background: var(--bg);
   color: var(--text);
   transition: background 0.2s, color 0.2s;
+  /* prevent iOS horizontal overflow */
+  overflow-x: hidden;
 }
 
 /* ── App layout ── */
 .app {
   max-width: 860px;
   margin: 0 auto;
-  padding: 0 16px 40px;
+  padding: 0 16px 48px;
 }
 
-/* ── Header ── */
+/* ── Header — genuine full-width, content centred inside ── */
 .app-header {
   background: var(--primary);
   color: #f0ede8;
-  padding: 20px 24px;
-  margin: 0 -16px 24px;
+  width: 100%;
+  margin-bottom: 24px;
+}
+.app-header-inner {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 20px 16px 18px;
   text-align: center;
 }
 .app-title { margin: 0 0 4px; font-size: 1.8rem; font-weight: bold; letter-spacing: 0.03em; }
-.app-subtitle { margin: 0 0 16px; font-size: 0.95rem; opacity: 0.8; font-style: italic; }
-.header-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+.app-subtitle { margin: 0 0 14px; font-size: 0.95rem; opacity: 0.8; font-style: italic; }
+.header-actions { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
 
 /* Theme toggle button */
 .btn-theme-toggle {
   background: transparent;
   color: #f0ede8;
   border: 1.5px solid rgba(240,237,232,0.5);
-  padding: 7px 14px;
+  padding: 10px 14px;
+  min-height: 44px;
   border-radius: 4px;
   cursor: pointer;
   font-size: 0.88rem;
@@ -185,21 +193,22 @@ body {
 /* ── Option buttons ── */
 .option-list {
   display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
+  flex-direction: column;
+  gap: 6px;
   margin-bottom: 12px;
 }
 .option-btn {
   background: var(--bg-option-btn);
   border: 1.5px solid var(--border-input);
   border-radius: 4px;
-  padding: 6px 12px;
-  font-size: 0.88rem;
+  padding: 10px 14px;
+  min-height: 44px;
+  font-size: 0.9rem;
   cursor: pointer;
   text-align: left;
   color: var(--text);
   transition: background 0.15s, border-color 0.15s;
-  max-width: 280px;
+  width: 100%;
 }
 .option-btn:hover { background: var(--bg-option-btn-hover); border-color: var(--text-muted); }
 .option-btn--active {
@@ -236,18 +245,23 @@ body {
   font-size: 0.88rem;
   font-weight: bold;
   color: var(--text-muted);
-  margin-bottom: 4px;
+  margin-bottom: 5px;
 }
 .text-input {
   width: 100%;
-  padding: 8px 10px;
+  /* 16px prevents iOS auto-zoom on focus */
+  font-size: 16px;
+  padding: 10px 12px;
+  min-height: 44px;
   border: 1.5px solid var(--border-input);
   border-radius: 4px;
-  font-size: 0.95rem;
   font-family: inherit;
   color: var(--text);
   background: var(--bg-input);
   transition: background 0.2s, color 0.2s, border-color 0.15s;
+  /* prevent iOS default styling on selects */
+  -webkit-appearance: none;
+  appearance: none;
 }
 .text-input:focus { outline: none; border-color: var(--primary); }
 
@@ -258,12 +272,20 @@ body {
 .toggle-label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
   cursor: pointer;
   font-size: 0.95rem;
   margin: 6px 0 10px;
+  /* larger tap target */
+  min-height: 36px;
 }
-.toggle-label input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); }
+.toggle-label input[type="checkbox"] {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  cursor: pointer;
+  accent-color: var(--primary);
+}
 
 /* ── Mode toggle (A/B) ── */
 .mode-toggle {
@@ -273,15 +295,18 @@ body {
   border-radius: 4px;
   overflow: hidden;
   border: 1.5px solid var(--primary);
-  width: fit-content;
+  width: 100%;
+  max-width: 420px;
 }
 .mode-btn {
   background: var(--bg-mode-btn);
   border: none;
-  padding: 8px 18px;
+  padding: 11px 18px;
+  min-height: 44px;
   cursor: pointer;
   font-size: 0.9rem;
   color: var(--primary-text);
+  flex: 1;
   transition: background 0.15s, color 0.15s;
 }
 .mode-btn--active { background: var(--primary); color: #fff; }
@@ -291,22 +316,26 @@ body {
 .hymn-row { margin-bottom: 8px; }
 .hymn-select {
   width: 100%;
-  padding: 8px 10px;
+  padding: 10px 12px;
+  min-height: 44px;
   border: 1.5px solid var(--border-input);
   border-radius: 4px;
-  font-size: 0.93rem;
+  font-size: 16px;
   font-family: inherit;
   background: var(--bg-input);
   color: var(--text);
+  -webkit-appearance: none;
+  appearance: none;
   transition: background 0.2s, color 0.2s;
 }
 .hymn-custom-row { margin-bottom: 6px; }
 .hymn-custom-input {
   width: 100%;
-  padding: 7px 10px;
+  padding: 10px 12px;
+  min-height: 44px;
   border: 1.5px solid var(--border-input);
   border-radius: 4px;
-  font-size: 0.93rem;
+  font-size: 16px;
   font-family: inherit;
   background: var(--bg-input);
   color: var(--text);
@@ -335,10 +364,11 @@ body {
   background: var(--primary);
   color: #fff;
   border: none;
-  padding: 9px 18px;
+  padding: 11px 20px;
+  min-height: 44px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.93rem;
+  font-size: 0.95rem;
   font-family: inherit;
   transition: background 0.15s;
 }
@@ -348,17 +378,18 @@ body {
   background: var(--bg-card);
   color: var(--primary-text);
   border: 1.5px solid var(--primary);
-  padding: 8px 16px;
+  padding: 10px 18px;
+  min-height: 44px;
   border-radius: 4px;
   cursor: pointer;
-  font-size: 0.93rem;
+  font-size: 0.95rem;
   font-family: inherit;
   transition: background 0.15s;
 }
 .btn-secondary:hover { background: var(--primary-light); }
 
-.btn-small { padding: 5px 10px; font-size: 0.82rem; }
-.btn-danger { background: #c0392b; color: #fff; border: none; border-radius: 4px; padding: 5px 10px; font-size: 0.82rem; cursor: pointer; }
+.btn-small { padding: 8px 12px; min-height: 36px; font-size: 0.84rem; }
+.btn-danger { background: #c0392b; color: #fff; border: none; border-radius: 4px; padding: 8px 12px; min-height: 36px; font-size: 0.84rem; cursor: pointer; }
 .btn-danger:hover { background: #e74c3c; }
 
 /* ── Info note ── */
@@ -428,8 +459,9 @@ body {
 }
 .print-toolbar {
   display: flex;
-  gap: 10px;
-  padding: 12px 24px;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 12px 16px;
   background: #2c4a2e;
   position: sticky;
   top: 0;
@@ -502,9 +534,38 @@ body {
 
 /* ── Responsive ── */
 @media (max-width: 600px) {
+  .app { padding: 0 12px 48px; }
   .app-title { font-size: 1.4rem; }
-  .card { padding: 14px 16px; }
+  .app-subtitle { font-size: 0.88rem; }
+  .app-header-inner { padding: 16px 12px 14px; }
+
+  /* Stack header buttons vertically on very small screens */
+  .header-actions { flex-direction: column; align-items: stretch; gap: 8px; padding: 0 8px; }
+  .header-actions .btn-primary,
+  .header-actions .btn-secondary,
+  .header-actions .btn-theme-toggle { width: 100%; }
+
+  .card { padding: 14px 12px; }
+  .section-block { margin-bottom: 20px; padding-bottom: 16px; }
+
   .field-row { flex-direction: column; gap: 10px; }
-  .option-btn { max-width: 100%; }
-  .dialog { padding: 18px 16px; }
+
+  /* Option list as full-width vertical stack — already default now */
+  .mode-toggle { max-width: 100%; }
+
+  .name-preview { gap: 8px; }
+  .name-preview span { font-size: 0.82rem; }
+
+  .dialog { padding: 18px 14px; max-height: 90vh; }
+  .save-row { flex-direction: column; align-items: flex-start; }
+  .save-actions { width: 100%; justify-content: flex-end; }
+
+  .print-content { padding: 20px 12px 40px; }
+  .print-toolbar { padding: 10px 12px; }
+  .print-toolbar .btn-primary,
+  .print-toolbar .btn-secondary { flex: 1; }
+
+  .selected-text { font-size: 0.88rem; padding: 8px 10px; }
+  .rubric { font-size: 0.85rem; }
+  .subsection-label { font-size: 0.82rem; }
 }

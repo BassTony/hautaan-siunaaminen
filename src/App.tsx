@@ -654,9 +654,8 @@ export default function App() {
         />
       )}
 
-      <div className="app">
-        {/* Top bar */}
-        <header className="app-header">
+      <header className="app-header">
+        <div className="app-header-inner">
           <h1 className="app-title">Hautaan siunaaminen</h1>
           <p className="app-subtitle">Liturgian suunnittelutyökalu</p>
           <div className="header-actions">
@@ -670,7 +669,10 @@ export default function App() {
               Esikatsele / tulosta
             </button>
           </div>
-        </header>
+        </div>
+      </header>
+
+      <div className="app">
 
         {/* Event & person info */}
         <section className="card">

@@ -11,6 +11,8 @@ import {
   ALKUSIUNAUS,
 } from './data/liturgyData';
 import { FUNERAL_HYMNS } from './data/hymns';
+import { CLASSICAL_PIECES } from './data/classicalMusic';
+import type { ClassicalPiece } from './data/classicalMusic';
 import { conjugateDisplayName } from './utils/finnishConjugation';
 import { applyNameForms } from './utils/textUtils';
 import { loadSaves, saveFile, deleteSave, autoSave, loadAutoSave } from './utils/storage';
@@ -23,26 +25,36 @@ const DEFAULT: LiturgySelections = {
   gender: 'female',
   saveName: '',
   eventDate: '',
+  burialType: 'arkku',
+  alkusoitto: { type: 'none' },
+  kukkienlaskeminen: 'none',
   hymn1: { type: 'none' },
   johdantosanat: 0,
   includeRippi: false,
   rippiVariant: 0,
+  includeAntifoni: true,
   antifoni: 0,
   psalmi: 0,
   includePieniKunnia: false,
   rukous6: 0,
   sana7mode: 'A',
   scripture7: [0],
+  scripture7multiSelect: false,
   speechVariant7: 0,
   theme7: [],
   includeUskontunnustus: true,
   siunaussanatIntro: 0,
   siunaussanat: 0,
+  siunaussanatHaudalla: false,
+  includeVirsi10: false,
   hymn10: { type: 'none' },
   esirukous: 0,
   hymn14: { type: 'none' },
+  includeSaattomusiikki: false,
+  saattomusiikki: { type: 'none' },
   includeHaudalla: false,
   rukoushaudalla: 0,
+  hymnHaudalla: { type: 'none' },
 };
 
 // ─── Helper components ────────────────────────────────────────────────────────
@@ -56,14 +68,20 @@ function SectionHeader({ num, title }: { num: number | string; title: string }) 
   );
 }
 
+function UnnumberedHeader({ title }: { title: string }) {
+  return (
+    <div className="section-header section-header--unnumbered">
+      <span className="section-title">{title}</span>
+    </div>
+  );
+}
+
 function Rubric({ text }: { text: string }) {
   return <p className="rubric">{text}</p>;
 }
 
 function SelectedText({ text }: { text: string }) {
-  return (
-    <pre className="selected-text">{text}</pre>
-  );
+  return <pre className="selected-text">{text}</pre>;
 }
 
 function OptionButton({
@@ -106,11 +124,7 @@ function HymnSelector({
           value={value.type === 'predefined' ? value.hymnId ?? '' : ''}
           onChange={e => {
             const id = e.target.value;
-            if (id === '') {
-              onChange({ type: 'none' });
-            } else {
-              onChange({ type: 'predefined', hymnId: id });
-            }
+            onChange(id === '' ? { type: 'none' } : { type: 'predefined', hymnId: id });
           }}
           className="hymn-select"
         >
@@ -138,6 +152,61 @@ function HymnSelector({
         <div className="hymn-preview">
           {value.type === 'predefined'
             ? FUNERAL_HYMNS.find(h => h.id === value.hymnId)?.title ?? ''
+            : value.customText}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ClassicalSelector({
+  value,
+  onChange,
+  label,
+}: {
+  value: HymnChoice;
+  onChange: (v: HymnChoice) => void;
+  label: string;
+}) {
+  return (
+    <div className="hymn-selector">
+      <label className="input-label">{label}</label>
+      <div className="hymn-row">
+        <select
+          value={value.type === 'predefined' ? value.hymnId ?? '' : ''}
+          onChange={e => {
+            const id = e.target.value;
+            onChange(id === '' ? { type: 'none' } : { type: 'predefined', hymnId: id });
+          }}
+          className="hymn-select"
+        >
+          <option value="">— Ei valittua teosta —</option>
+          {CLASSICAL_PIECES.map((p: ClassicalPiece) => (
+            <option key={p.id} value={p.id}>
+              {p.composer}: {p.title}
+            </option>
+          ))}
+        </select>
+      </div>
+      <div className="hymn-custom-row">
+        <input
+          type="text"
+          placeholder="Tai kirjoita vapaavalintainen teos tähän"
+          value={value.type === 'custom' ? value.customText ?? '' : ''}
+          onChange={e => {
+            const t = e.target.value;
+            onChange(t ? { type: 'custom', customText: t } : { type: 'none' });
+          }}
+          className="hymn-custom-input"
+        />
+      </div>
+      {value.type !== 'none' && (
+        <div className="hymn-preview">
+          {value.type === 'predefined'
+            ? (() => {
+                const p = CLASSICAL_PIECES.find(x => x.id === value.hymnId);
+                return p ? `${p.composer}: ${p.title}` : '';
+              })()
             : value.customText}
         </div>
       )}
@@ -199,6 +268,19 @@ function PrintView({
     return h.customText ?? '—';
   };
 
+  const classicalLabel = (h: HymnChoice) => {
+    if (h.type === 'none') return '— (ei valittu) —';
+    if (h.type === 'predefined') {
+      const p = CLASSICAL_PIECES.find(x => x.id === h.hymnId);
+      return p ? `${p.composer}: ${p.title}` : '—';
+    }
+    return h.customText ?? '—';
+  };
+
+  const kukkiBefore = sel.kukkienlaskeminen === 'before';
+  const kukkilAfter = sel.kukkienlaskeminen === 'after';
+  const isArkku = sel.burialType === 'arkku';
+
   return (
     <div className="print-overlay">
       <div className="print-toolbar no-print">
@@ -214,6 +296,21 @@ function PrintView({
         <h1 className="print-title">Hautaan siunaaminen</h1>
         {fullName && <p className="print-subtitle">{fullName}</p>}
         {sel.eventDate && <p className="print-subtitle">{sel.eventDate}</p>}
+
+        {/* Unnumbered: Alkusoitto */}
+        {sel.alkusoitto.type !== 'none' && (
+          <div className="print-item">
+            <h3>Alkusoitto</h3>
+            <p>{classicalLabel(sel.alkusoitto)}</p>
+          </div>
+        )}
+
+        {/* Unnumbered: Kukkien laskeminen (before) */}
+        {kukkiBefore && (
+          <div className="print-item">
+            <p className="print-rubric">Kukkien laskeminen</p>
+          </div>
+        )}
 
         <div className="print-section">
           <h2>I Johdanto</h2>
@@ -247,11 +344,20 @@ function PrintView({
 
           <div className="print-item">
             <h3>5. Psalmi</h3>
-            <p className="print-rubric">Antifoni:</p>
-            <pre>{ANTIFONI[sel.antifoni].text}</pre>
+            {sel.includeAntifoni && (
+              <>
+                <p className="print-rubric">Antifoni:</p>
+                <pre>{ANTIFONI[sel.antifoni].text}</pre>
+              </>
+            )}
             <pre>{PSALMIT[sel.psalmi].text}</pre>
             {sel.includePieniKunnia && <pre>{PIENI_KUNNIA}</pre>}
-            <p className="print-rubric">Antifoni toistetaan.</p>
+            {sel.includeAntifoni && (
+              <>
+                <p className="print-rubric">Antifoni toistetaan:</p>
+                <pre>{ANTIFONI[sel.antifoni].text}</pre>
+              </>
+            )}
           </div>
 
           <div className="print-item">
@@ -291,16 +397,28 @@ function PrintView({
             </div>
           )}
 
-          <div className="print-item">
-            <h3>*9. Siunaussanat</h3>
-            <pre>{applyName(SIUNAUSSANAT_INTRO[sel.siunaussanatIntro].text)}</pre>
-            <pre>{applyName(SIUNAUSSANAT[sel.siunaussanat].text)}</pre>
-          </div>
+          {/* 9. Siunaussanat — show here only if NOT deferred to section 16 */}
+          {!sel.siunaussanatHaudalla && (
+            <div className="print-item">
+              <h3>*9. Siunaussanat</h3>
+              <pre>{applyName(SIUNAUSSANAT_INTRO[sel.siunaussanatIntro].text)}</pre>
+              <pre>{applyName(SIUNAUSSANAT[sel.siunaussanat].text)}</pre>
+            </div>
+          )}
 
-          <div className="print-item">
-            <h3>10. Virsi</h3>
-            <p>{hymnLabel(sel.hymn10)}</p>
-          </div>
+          {sel.siunaussanatHaudalla && (
+            <div className="print-item">
+              <h3>*9. Siunaussanat</h3>
+              <p className="print-rubric">Siunaussanat lausutaan haudalla (kohta 16).</p>
+            </div>
+          )}
+
+          {sel.includeVirsi10 && (
+            <div className="print-item">
+              <h3>10. Virsi</h3>
+              <p>{hymnLabel(sel.hymn10)}</p>
+            </div>
+          )}
 
           <div className="print-item">
             <h3>11. Esirukous</h3>
@@ -324,12 +442,49 @@ function PrintView({
           <div className="print-item">
             <h3>14. Päätösmusiikki</h3>
             <p>{hymnLabel(sel.hymn14)}</p>
+            {!sel.includeSaattomusiikki && sel.saattomusiikki.type !== 'none' && (
+              <p>{classicalLabel(sel.saattomusiikki)}</p>
+            )}
           </div>
 
-          {sel.includeHaudalla && (
+          {/* Unnumbered: Kukkien laskeminen (after) */}
+          {kukkilAfter && (
+            <div className="print-item">
+              <p className="print-rubric">Kukkien laskeminen</p>
+            </div>
+          )}
+
+          {sel.includeSaattomusiikki && sel.saattomusiikki.type !== 'none' && (
+            <div className="print-item">
+              <h3>Saattomusiikki</h3>
+              <p>{classicalLabel(sel.saattomusiikki)}</p>
+            </div>
+          )}
+
+          {isArkku && sel.includeHaudalla && (
             <div className="print-item">
               <h3>15. Rukous haudalla</h3>
+              {sel.hymnHaudalla.type !== 'none' && (
+                <p>{hymnLabel(sel.hymnHaudalla)}</p>
+              )}
               <pre>{applyName(RUKOUS_HAUDALLA[sel.rukoushaudalla].text)}</pre>
+            </div>
+          )}
+
+          {isArkku && (
+            <div className="print-item">
+              <h3>16. Hautaan laskeminen</h3>
+              {sel.siunaussanatHaudalla && (
+                <>
+                  <p className="print-rubric">Siunaussanat:</p>
+                  <pre>{applyName(SIUNAUSSANAT_INTRO[sel.siunaussanatIntro].text)}</pre>
+                  <pre>{applyName(SIUNAUSSANAT[sel.siunaussanat].text)}</pre>
+                </>
+              )}
+              <p className="print-rubric">
+                Arkkua hautaan laskettaessa voidaan laulaa virsi (esim. 242:7–9 tai 376:3).
+                Kun kukkalaitteet on asetettu haudalle, voidaan laulaa virsi (esim. 363 tai 377).
+              </p>
             </div>
           )}
         </div>
@@ -465,6 +620,8 @@ export default function App() {
     setSaves(prev => deleteSave(prev, id));
   }
 
+  const isArkku = sel.burialType === 'arkku';
+
   return (
     <>
       {showPrint && (
@@ -554,9 +711,69 @@ export default function App() {
           )}
         </section>
 
+        {/* Burial type */}
+        <section className="card">
+          <h2 className="card-title">Hautauksen muoto</h2>
+          <div className="mode-toggle">
+            <button
+              className={`mode-btn${sel.burialType === 'arkku' ? ' mode-btn--active' : ''}`}
+              onClick={() => update('burialType', 'arkku')}
+              type="button"
+            >
+              Arkkuhautaus
+            </button>
+            <button
+              className={`mode-btn${sel.burialType === 'tuhka' ? ' mode-btn--active' : ''}`}
+              onClick={() => update('burialType', 'tuhka')}
+              type="button"
+            >
+              Tuhkaus
+            </button>
+          </div>
+          {!isArkku && (
+            <p className="info-note">
+              Tuhkauksessa osiot 15. Rukous haudalla ja 16. Hautaan laskeminen eivät sisälly toimitukseen.
+            </p>
+          )}
+        </section>
+
         {/* ── I JOHDANTO ─────────────────────────────────────────── */}
         <section className="card">
           <h2 className="card-section-group">I Johdanto</h2>
+
+          {/* Unnumbered: Alkusoitto */}
+          <div className="section-block">
+            <UnnumberedHeader title="Alkusoitto" />
+            <Rubric text="Alkusoittona voidaan käyttää klassista instrumentaalimusiikkia tai muuta sopivaa musiikkia." />
+            <ClassicalSelector
+              label="Valitse alkusoitto"
+              value={sel.alkusoitto}
+              onChange={v => update('alkusoitto', v)}
+            />
+          </div>
+
+          {/* Unnumbered: Kukkien laskeminen */}
+          <div className="section-block">
+            <UnnumberedHeader title="Kukkien laskeminen" />
+            <Rubric text="Valitse kukkien laskemisen ajankohta tai jätä pois." />
+            <div className="option-list">
+              <OptionButton
+                label="Ennen 1. Virttä (Alkusoiton ja virren välissä)"
+                active={sel.kukkienlaskeminen === 'before'}
+                onClick={() => update('kukkienlaskeminen', sel.kukkienlaskeminen === 'before' ? 'none' : 'before')}
+              />
+              <OptionButton
+                label="14. Päätösmusiikin jälkeen"
+                active={sel.kukkienlaskeminen === 'after'}
+                onClick={() => update('kukkienlaskeminen', sel.kukkienlaskeminen === 'after' ? 'none' : 'after')}
+              />
+            </div>
+            {sel.kukkienlaskeminen !== 'none' && (
+              <p className="info-note">
+                Kukkien laskeminen: {sel.kukkienlaskeminen === 'before' ? 'ennen 1. Virttä' : '14. Päätösmusiikin jälkeen'}
+              </p>
+            )}
+          </div>
 
           {/* 1. Virsi */}
           <div className="section-block">
@@ -622,13 +839,26 @@ export default function App() {
             <SectionHeader num={5} title="Psalmi" />
             <Rubric text="Psalmi voidaan laulaa tai lukea. Sen alussa ja lopussa voi olla antifoni." />
 
-            <p className="subsection-label">Antifoni</p>
-            <SelectSection
-              options={ANTIFONI}
-              selected={sel.antifoni}
-              onSelect={i => update('antifoni', i)}
-            />
-            <SelectedText text={ANTIFONI[sel.antifoni].text} />
+            <label className="toggle-label">
+              <input
+                type="checkbox"
+                checked={sel.includeAntifoni}
+                onChange={e => update('includeAntifoni', e.target.checked)}
+              />
+              Sisällytetään antifoni
+            </label>
+
+            {sel.includeAntifoni && (
+              <>
+                <p className="subsection-label">Antifoni</p>
+                <SelectSection
+                  options={ANTIFONI}
+                  selected={sel.antifoni}
+                  onSelect={i => update('antifoni', i)}
+                />
+                <SelectedText text={ANTIFONI[sel.antifoni].text} />
+              </>
+            )}
 
             <p className="subsection-label">Psalmi</p>
             <SelectSection
@@ -647,7 +877,13 @@ export default function App() {
               Sisällytetään Pieni kunnia
             </label>
             {sel.includePieniKunnia && <SelectedText text={PIENI_KUNNIA} />}
-            <Rubric text="Antifoni toistetaan." />
+
+            {sel.includeAntifoni && (
+              <div className="antifoni-repeat">
+                <Rubric text="Antifoni toistetaan:" />
+                <SelectedText text={ANTIFONI[sel.antifoni].text} />
+              </div>
+            )}
           </div>
 
           {/* 6. Rukous */}
@@ -685,7 +921,27 @@ export default function App() {
 
             {sel.sana7mode === 'A' ? (
               <>
-                <p className="subsection-label">Raamatuntekstit (valitse yksi tai useampia)</p>
+                <div className="multi-select-toggle">
+                  <label className="toggle-label">
+                    <input
+                      type="checkbox"
+                      checked={sel.scripture7multiSelect}
+                      onChange={e => {
+                        const multi = e.target.checked;
+                        update('scripture7multiSelect', multi);
+                        // When switching to single, keep only the first selection
+                        if (!multi && sel.scripture7.length > 1) {
+                          update('scripture7', [sel.scripture7[0]]);
+                        }
+                      }}
+                    />
+                    Salli useamman raamatunkohdan valinta
+                  </label>
+                </div>
+
+                <p className="subsection-label">
+                  Raamatuntekstit {sel.scripture7multiSelect ? '(valitse yksi tai useampia)' : '(valitse yksi)'}
+                </p>
                 <div className="option-list">
                   {RAAMATUNLUUT.map((r, i) => (
                     <button
@@ -693,10 +949,16 @@ export default function App() {
                       type="button"
                       className={`option-btn${sel.scripture7.includes(i) ? ' option-btn--active' : ''}`}
                       onClick={() => {
-                        const next = sel.scripture7.includes(i)
-                          ? sel.scripture7.filter(x => x !== i)
-                          : [...sel.scripture7, i];
-                        update('scripture7', next.length ? next : [i]);
+                        if (sel.scripture7multiSelect) {
+                          // Toggle inclusion
+                          const next = sel.scripture7.includes(i)
+                            ? sel.scripture7.filter(x => x !== i)
+                            : [...sel.scripture7, i];
+                          update('scripture7', next.length ? next : [i]);
+                        } else {
+                          // Single select
+                          update('scripture7', [i]);
+                        }
                       }}
                     >
                       {r.context && <span className="option-context">{r.context}</span>}
@@ -759,13 +1021,24 @@ export default function App() {
             <SectionHeader num="*9" title="Siunaussanat" />
             <Rubric text="Siunaussanat voidaan lausua myös haudalla (kohta 16)." />
 
+            <label className="toggle-label">
+              <input
+                type="checkbox"
+                checked={sel.siunaussanatHaudalla}
+                onChange={e => update('siunaussanatHaudalla', e.target.checked)}
+              />
+              Siunaussanat lausutaan haudalla (kohta 16)
+            </label>
+
             <p className="subsection-label">Johdantolause</p>
             <SelectSection
               options={SIUNAUSSANAT_INTRO}
               selected={sel.siunaussanatIntro}
               onSelect={i => update('siunaussanatIntro', i as 0 | 1)}
             />
-            <SelectedText text={applyName(SIUNAUSSANAT_INTRO[sel.siunaussanatIntro].text)} />
+            {!sel.siunaussanatHaudalla && (
+              <SelectedText text={applyName(SIUNAUSSANAT_INTRO[sel.siunaussanatIntro].text)} />
+            )}
 
             <p className="subsection-label">Siunaussanat</p>
             <SelectSection
@@ -773,18 +1046,35 @@ export default function App() {
               selected={sel.siunaussanat}
               onSelect={i => update('siunaussanat', i)}
             />
-            <SelectedText text={applyName(SIUNAUSSANAT[sel.siunaussanat].text)} />
+            {!sel.siunaussanatHaudalla && (
+              <SelectedText text={applyName(SIUNAUSSANAT[sel.siunaussanat].text)} />
+            )}
+            {sel.siunaussanatHaudalla && (
+              <p className="info-note">
+                Siunaussanat näkyvät tulosteessa osiossa 16. Hautaan laskeminen.
+              </p>
+            )}
           </div>
 
-          {/* 10. Virsi */}
+          {/* 10. Virsi (optional) */}
           <div className="section-block">
             <SectionHeader num={10} title="Virsi" />
             <Rubric text="Virren sijasta voidaan käyttää hautaan siunaamisen laulua tai muuta sopivaa musiikkia." />
-            <HymnSelector
-              label="Valitse virsi / musiikki"
-              value={sel.hymn10}
-              onChange={v => update('hymn10', v)}
-            />
+            <label className="toggle-label">
+              <input
+                type="checkbox"
+                checked={sel.includeVirsi10}
+                onChange={e => update('includeVirsi10', e.target.checked)}
+              />
+              Sisällytetään virsi 10
+            </label>
+            {sel.includeVirsi10 && (
+              <HymnSelector
+                label="Valitse virsi / musiikki"
+                value={sel.hymn10}
+                onChange={v => update('hymn10', v)}
+              />
+            )}
           </div>
 
           {/* 11. Esirukous */}
@@ -822,43 +1112,85 @@ export default function App() {
             <SectionHeader num={14} title="Päätösmusiikki" />
             <Rubric text="Päätösmusiikkina voi olla virsi ja/tai muuta sopivaa musiikkia." />
             <HymnSelector
-              label="Valitse päätösmusiikki"
+              label="Valitse päätösvirsi / musiikki"
               value={sel.hymn14}
               onChange={v => update('hymn14', v)}
             />
-          </div>
-
-          {/* 15. Rukous haudalla */}
-          <div className="section-block">
-            <SectionHeader num={15} title="Rukous haudalla" />
-            <label className="toggle-label">
-              <input
-                type="checkbox"
-                checked={sel.includeHaudalla}
-                onChange={e => update('includeHaudalla', e.target.checked)}
+            {/* When Saattomusiikki is disabled, show classical music here too */}
+            {!sel.includeSaattomusiikki && (
+              <ClassicalSelector
+                label="Saattomusiikki (instrumentaali)"
+                value={sel.saattomusiikki}
+                onChange={v => update('saattomusiikki', v)}
               />
-              Sisällytetään rukous haudalla
-            </label>
-            {sel.includeHaudalla && (
-              <>
-                <SelectSection
-                  options={RUKOUS_HAUDALLA}
-                  selected={sel.rukoushaudalla}
-                  onSelect={i => update('rukoushaudalla', i)}
-                />
-                <SelectedText text={applyName(RUKOUS_HAUDALLA[sel.rukoushaudalla].text)} />
-              </>
             )}
           </div>
 
-          {/* 16. Hautaan laskeminen */}
+          {/* Unnumbered: Saattomusiikki */}
           <div className="section-block">
-            <SectionHeader num={16} title="Hautaan laskeminen" />
-            <Rubric text="Arkkua hautaan laskettaessa voidaan laulaa virsi (esimerkiksi 242:7–9 tai 376:3). Pappi lausuu siunaussanat, mikäli niitä ei ole lausuttu kohdassa 9. Kun kukkalaitteet on asetettu haudalle, voidaan laulaa virsi (esimerkiksi 363 tai 377)." />
-            <p className="info-note">
-              Siunaussanat (kohta 9) voidaan lausua vaihtoehtoisesti tässä haudalla.
-            </p>
+            <UnnumberedHeader title="Saattomusiikki" />
+            <Rubric text="Erillinen saattomusiikki siunauksen jälkeen. Voidaan yhdistää 14. Päätösmusiikkiin poistamalla rasti." />
+            <label className="toggle-label">
+              <input
+                type="checkbox"
+                checked={sel.includeSaattomusiikki}
+                onChange={e => update('includeSaattomusiikki', e.target.checked)}
+              />
+              Erillinen saattomusiikki
+            </label>
+            {sel.includeSaattomusiikki && (
+              <ClassicalSelector
+                label="Valitse saattomusiikki"
+                value={sel.saattomusiikki}
+                onChange={v => update('saattomusiikki', v)}
+              />
+            )}
           </div>
+
+          {/* 15. Rukous haudalla — only for Arkkuhautaus */}
+          {isArkku && (
+            <div className="section-block">
+              <SectionHeader num={15} title="Rukous haudalla" />
+              <label className="toggle-label">
+                <input
+                  type="checkbox"
+                  checked={sel.includeHaudalla}
+                  onChange={e => update('includeHaudalla', e.target.checked)}
+                />
+                Sisällytetään rukous haudalla
+              </label>
+              {sel.includeHaudalla && (
+                <>
+                  <HymnSelector
+                    label="Virsi haudalla (valinnainen)"
+                    value={sel.hymnHaudalla}
+                    onChange={v => update('hymnHaudalla', v)}
+                  />
+                  <SelectSection
+                    options={RUKOUS_HAUDALLA}
+                    selected={sel.rukoushaudalla}
+                    onSelect={i => update('rukoushaudalla', i)}
+                  />
+                  <SelectedText text={applyName(RUKOUS_HAUDALLA[sel.rukoushaudalla].text)} />
+                </>
+              )}
+            </div>
+          )}
+
+          {/* 16. Hautaan laskeminen — only for Arkkuhautaus */}
+          {isArkku && (
+            <div className="section-block">
+              <SectionHeader num={16} title="Hautaan laskeminen" />
+              <Rubric text="Arkkua hautaan laskettaessa voidaan laulaa virsi (esimerkiksi 242:7–9 tai 376:3). Pappi lausuu siunaussanat, mikäli niitä ei ole lausuttu kohdassa 9. Kun kukkalaitteet on asetettu haudalle, voidaan laulaa virsi (esimerkiksi 363 tai 377)." />
+              {sel.siunaussanatHaudalla && (
+                <div className="info-note">
+                  <p>Siunaussanat lausutaan tässä (siirretty kohdasta 9):</p>
+                  <SelectedText text={applyName(SIUNAUSSANAT_INTRO[sel.siunaussanatIntro].text)} />
+                  <SelectedText text={applyName(SIUNAUSSANAT[sel.siunaussanat].text)} />
+                </div>
+              )}
+            </div>
+          )}
         </section>
 
         <footer className="app-footer">

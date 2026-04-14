@@ -34,6 +34,7 @@ const DEFAULT: LiturgySelections = {
   rippiVariant: 0,
   includeAntifoni: true,
   antifoni: 0,
+  includePsalmi: true,
   psalmi: 0,
   includePieniKunnia: false,
   rukous6: 0,
@@ -367,23 +368,25 @@ function PrintView({
         <div className="print-section">
           <h2>II Sana</h2>
 
-          <div className="print-item">
-            <h3>5. Psalmi</h3>
-            {sel.includeAntifoni && (
-              <>
-                <p className="print-rubric">Antifoni:</p>
-                <pre>{ANTIFONI[sel.antifoni].text}</pre>
-              </>
-            )}
-            <pre>{PSALMIT[sel.psalmi].text}</pre>
-            {sel.includePieniKunnia && <pre>{PIENI_KUNNIA}</pre>}
-            {sel.includeAntifoni && (
-              <>
-                <p className="print-rubric">Antifoni toistetaan:</p>
-                <pre>{ANTIFONI[sel.antifoni].text}</pre>
-              </>
-            )}
-          </div>
+          {sel.includePsalmi && (
+            <div className="print-item">
+              <h3>5. Psalmi</h3>
+              {sel.includeAntifoni && (
+                <>
+                  <p className="print-rubric">Antifoni:</p>
+                  <pre>{ANTIFONI[sel.antifoni].text}</pre>
+                </>
+              )}
+              <pre>{PSALMIT[sel.psalmi].text}</pre>
+              {sel.includePieniKunnia && <pre>{PIENI_KUNNIA}</pre>}
+              {sel.includeAntifoni && (
+                <>
+                  <p className="print-rubric">Antifoni toistetaan:</p>
+                  <pre>{ANTIFONI[sel.antifoni].text}</pre>
+                </>
+              )}
+            </div>
+          )}
 
           <div className="print-item">
             <h3>6. Rukous</h3>
@@ -873,52 +876,59 @@ export default function App() {
           {/* 5. Psalmi */}
           <div className="section-block">
             <SectionHeader num={5} title="Psalmi" />
-            <Rubric text="Psalmi voidaan laulaa tai lukea. Sen alussa ja lopussa voi olla antifoni." />
-
             <label className="toggle-label">
               <input
                 type="checkbox"
-                checked={sel.includeAntifoni}
-                onChange={e => update('includeAntifoni', e.target.checked)}
+                checked={sel.includePsalmi}
+                onChange={e => update('includePsalmi', e.target.checked)}
               />
-              Sisällytetään antifoni
+              Sisällytetään psalmi
             </label>
-
-            {sel.includeAntifoni && (
+            {sel.includePsalmi && (
               <>
-                <p className="subsection-label">Antifoni</p>
+                <Rubric text="Psalmi voidaan laulaa tai lukea. Sen alussa ja lopussa voi olla antifoni." />
+                <label className="toggle-label">
+                  <input
+                    type="checkbox"
+                    checked={sel.includeAntifoni}
+                    onChange={e => update('includeAntifoni', e.target.checked)}
+                  />
+                  Sisällytetään antifoni
+                </label>
+                {sel.includeAntifoni && (
+                  <>
+                    <p className="subsection-label">Antifoni</p>
+                    <SelectSection
+                      options={ANTIFONI}
+                      selected={sel.antifoni}
+                      onSelect={i => update('antifoni', i)}
+                    />
+                    <SelectedText text={ANTIFONI[sel.antifoni].text} />
+                  </>
+                )}
+                <p className="subsection-label">Psalmi</p>
                 <SelectSection
-                  options={ANTIFONI}
-                  selected={sel.antifoni}
-                  onSelect={i => update('antifoni', i)}
+                  options={PSALMIT}
+                  selected={sel.psalmi}
+                  onSelect={i => update('psalmi', i)}
                 />
-                <SelectedText text={ANTIFONI[sel.antifoni].text} />
+                <SelectedText text={PSALMIT[sel.psalmi].text} />
+                <label className="toggle-label">
+                  <input
+                    type="checkbox"
+                    checked={sel.includePieniKunnia}
+                    onChange={e => update('includePieniKunnia', e.target.checked)}
+                  />
+                  Sisällytetään Pieni kunnia
+                </label>
+                {sel.includePieniKunnia && <SelectedText text={PIENI_KUNNIA} />}
+                {sel.includeAntifoni && (
+                  <div className="antifoni-repeat">
+                    <Rubric text="Antifoni toistetaan:" />
+                    <SelectedText text={ANTIFONI[sel.antifoni].text} />
+                  </div>
+                )}
               </>
-            )}
-
-            <p className="subsection-label">Psalmi</p>
-            <SelectSection
-              options={PSALMIT}
-              selected={sel.psalmi}
-              onSelect={i => update('psalmi', i)}
-            />
-            <SelectedText text={PSALMIT[sel.psalmi].text} />
-
-            <label className="toggle-label">
-              <input
-                type="checkbox"
-                checked={sel.includePieniKunnia}
-                onChange={e => update('includePieniKunnia', e.target.checked)}
-              />
-              Sisällytetään Pieni kunnia
-            </label>
-            {sel.includePieniKunnia && <SelectedText text={PIENI_KUNNIA} />}
-
-            {sel.includeAntifoni && (
-              <div className="antifoni-repeat">
-                <Rubric text="Antifoni toistetaan:" />
-                <SelectedText text={ANTIFONI[sel.antifoni].text} />
-              </div>
             )}
           </div>
 
@@ -1007,6 +1017,9 @@ export default function App() {
                 ))}
 
                 <p className="subsection-label">Puhe</p>
+                <p className="info-note">
+                  Huom: Puheesimerkit ovat malleja. Puheen sisällöstä tulee sopia papin kanssa.
+                </p>
                 <SelectSection
                   options={PUHE7}
                   selected={sel.speechVariant7}

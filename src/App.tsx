@@ -318,15 +318,14 @@ function PrintView({
           </div>
         )}
 
-        {/* Unnumbered: Kukkien laskeminen (before) */}
-        {kukkiBefore && (
-          <div className="print-item">
-            <p className="print-rubric">Kukkien laskeminen</p>
-          </div>
-        )}
-
         <div className="print-section">
           <h2>I Johdanto</h2>
+
+          {kukkiBefore && (
+            <div className="print-item">
+              <h3>Kukkien laskeminen</h3>
+            </div>
+          )}
 
           <div className="print-item">
             <h3>1. Virsi</h3>
@@ -733,15 +732,6 @@ export default function App() {
             </div>
           </div>
 
-          {sel.firstNames && (
-            <div className="name-preview">
-              <span className="name-preview-label">Nimen sijamuodot:</span>
-              <span><b>Nominatiivi:</b> {forms.nominative}</span>
-              <span><b>Genetiivi (NN:n):</b> {forms.genitive}</span>
-              <span><b>Partitiivi (NN:ää):</b> {forms.partitive}</span>
-              <span><b>Allatiivi (NN:lle):</b> {forms.allative}</span>
-            </div>
-          )}
         </section>
 
         {/* Burial type */}

@@ -239,14 +239,25 @@ body {
 }
 
 .liturgy-line {
+  overflow-wrap: break-word;
+  word-break: break-word;
+  white-space: pre-wrap;
+}
+.liturgy-line--speaker {
+  display: flex;
+  align-items: flex-start;
+}
+.liturgy-prefix {
+  white-space: pre;
+  flex-shrink: 0;
+}
+.liturgy-body {
   white-space: pre-wrap;
   overflow-wrap: break-word;
-  padding-left: 1.5em;
-  text-indent: -1.5em;
+  word-break: break-word;
 }
 .liturgy-line--indented {
-  padding-left: 3em;
-  text-indent: -1.5em;
+  padding-left: 1.5em;
 }
 .liturgy-spacer {
   height: 0.65em;

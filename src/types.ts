@@ -37,6 +37,7 @@ export interface LiturgySelections {
   // II Sana
   includeAntifoni: boolean;    // antifon is optional
   antifoni: number;            // 0–2
+  includePsalmi: boolean;      // psalm is optional, default true
   psalmi: number;              // 0–7
   includePieniKunnia: boolean;
   rukous6: number;             // 0–3

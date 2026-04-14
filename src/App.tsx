@@ -80,18 +80,31 @@ function Rubric({ text }: { text: string }) {
   return <p className="rubric">{text}</p>;
 }
 
+const SPEAKER_RE = /^([PSE]\s{1,3})([\s\S]*)$/;
+
 function SelectedText({ text }: { text: string }) {
   const lines = text.split('\n');
   return (
     <div className="selected-text">
       {lines.map((line, i) => {
         if (line === '') return <div key={i} className="liturgy-spacer" />;
-        const indented = line.startsWith('\t');
-        return (
-          <div key={i} className={`liturgy-line${indented ? ' liturgy-line--indented' : ''}`}>
-            {indented ? line.slice(1) : line}
-          </div>
-        );
+        if (line.startsWith('\t')) {
+          return (
+            <div key={i} className="liturgy-line liturgy-line--indented">
+              {line.slice(1)}
+            </div>
+          );
+        }
+        const m = SPEAKER_RE.exec(line);
+        if (m) {
+          return (
+            <div key={i} className="liturgy-line liturgy-line--speaker">
+              <span className="liturgy-prefix">{m[1]}</span>
+              <span className="liturgy-body">{m[2]}</span>
+            </div>
+          );
+        }
+        return <div key={i} className="liturgy-line">{line}</div>;
       })}
     </div>
   );

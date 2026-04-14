@@ -193,7 +193,8 @@ body {
 /* ── Option buttons ── */
 .option-list {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  flex-wrap: wrap;
   gap: 6px;
   margin-bottom: 12px;
 }
@@ -208,7 +209,7 @@ body {
   text-align: left;
   color: var(--text);
   transition: background 0.15s, border-color 0.15s;
-  width: 100%;
+  width: auto;
 }
 .option-btn:hover { background: var(--bg-option-btn-hover); border-color: var(--text-muted); }
 .option-btn--active {
@@ -550,7 +551,6 @@ body {
 
   .field-row { flex-direction: column; gap: 10px; }
 
-  /* Option list as full-width vertical stack — already default now */
   .mode-toggle { max-width: 100%; }
 
   .name-preview { gap: 8px; }

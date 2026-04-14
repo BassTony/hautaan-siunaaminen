@@ -1079,28 +1079,28 @@ export default function App() {
               Siunaussanat lausutaan haudalla (kohta 16)
             </label>
 
-            <p className="subsection-label">Johdantolause</p>
-            <SelectSection
-              options={SIUNAUSSANAT_INTRO}
-              selected={sel.siunaussanatIntro}
-              onSelect={i => update('siunaussanatIntro', i as 0 | 1)}
-            />
             {!sel.siunaussanatHaudalla && (
-              <SelectedText text={applyName(SIUNAUSSANAT_INTRO[sel.siunaussanatIntro].text)} />
-            )}
+              <>
+                <p className="subsection-label">Johdantolause</p>
+                <SelectSection
+                  options={SIUNAUSSANAT_INTRO}
+                  selected={sel.siunaussanatIntro}
+                  onSelect={i => update('siunaussanatIntro', i as 0 | 1)}
+                />
+                <SelectedText text={applyName(SIUNAUSSANAT_INTRO[sel.siunaussanatIntro].text)} />
 
-            <p className="subsection-label">Siunaussanat</p>
-            <SelectSection
-              options={SIUNAUSSANAT}
-              selected={sel.siunaussanat}
-              onSelect={i => update('siunaussanat', i)}
-            />
-            {!sel.siunaussanatHaudalla && (
-              <SelectedText text={applyName(SIUNAUSSANAT[sel.siunaussanat].text)} />
+                <p className="subsection-label">Siunaussanat</p>
+                <SelectSection
+                  options={SIUNAUSSANAT}
+                  selected={sel.siunaussanat}
+                  onSelect={i => update('siunaussanat', i)}
+                />
+                <SelectedText text={applyName(SIUNAUSSANAT[sel.siunaussanat].text)} />
+              </>
             )}
             {sel.siunaussanatHaudalla && (
               <p className="info-note">
-                Siunaussanat näkyvät tulosteessa osiossa 16. Hautaan laskeminen.
+                Valinnat ja teksti näkyvät osiossa 16. Hautaan laskeminen.
               </p>
             )}
           </div>
@@ -1232,11 +1232,31 @@ export default function App() {
               <SectionHeader num={16} title="Hautaan laskeminen" />
               <Rubric text="Arkkua hautaan laskettaessa voidaan laulaa virsi (esimerkiksi 242:7–9 tai 376:3). Pappi lausuu siunaussanat, mikäli niitä ei ole lausuttu kohdassa 9. Kun kukkalaitteet on asetettu haudalle, voidaan laulaa virsi (esimerkiksi 363 tai 377)." />
               {sel.siunaussanatHaudalla && (
-                <div className="info-note">
-                  <p>Siunaussanat lausutaan tässä (siirretty kohdasta 9):</p>
+                <>
+                  <p className="subsection-label">Johdantolause</p>
+                  <SelectSection
+                    options={SIUNAUSSANAT_INTRO}
+                    selected={sel.siunaussanatIntro}
+                    onSelect={i => update('siunaussanatIntro', i as 0 | 1)}
+                  />
                   <SelectedText text={applyName(SIUNAUSSANAT_INTRO[sel.siunaussanatIntro].text)} />
+
+                  <p className="subsection-label">Siunaussanat</p>
+                  <SelectSection
+                    options={SIUNAUSSANAT}
+                    selected={sel.siunaussanat}
+                    onSelect={i => update('siunaussanat', i)}
+                  />
                   <SelectedText text={applyName(SIUNAUSSANAT[sel.siunaussanat].text)} />
-                </div>
+
+                  <button
+                    type="button"
+                    className="btn-secondary btn-small"
+                    onClick={() => update('siunaussanatHaudalla', false)}
+                  >
+                    Siirrä siunaussanat takaisin kohtaan 9
+                  </button>
+                </>
               )}
             </div>
           )}

@@ -81,7 +81,20 @@ function Rubric({ text }: { text: string }) {
 }
 
 function SelectedText({ text }: { text: string }) {
-  return <pre className="selected-text">{text}</pre>;
+  const lines = text.split('\n');
+  return (
+    <div className="selected-text">
+      {lines.map((line, i) => {
+        if (line === '') return <div key={i} className="liturgy-spacer" />;
+        const indented = line.startsWith('\t');
+        return (
+          <div key={i} className={`liturgy-line${indented ? ' liturgy-line--indented' : ''}`}>
+            {indented ? line.slice(1) : line}
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
 function OptionButton({

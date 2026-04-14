@@ -232,12 +232,24 @@ body {
   border-left: 3px solid var(--primary);
   padding: 10px 14px;
   margin: 8px 0;
-  font-family: 'Georgia', serif;
-  font-size: 0.93rem;
-  white-space: pre-wrap;
-  word-break: break-word;
+  font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif;
+  font-size: 1rem;
   color: var(--text);
-  line-height: 1.65;
+  line-height: 1.75;
+}
+
+.liturgy-line {
+  white-space: pre-wrap;
+  overflow-wrap: break-word;
+  padding-left: 1.5em;
+  text-indent: -1.5em;
+}
+.liturgy-line--indented {
+  padding-left: 3em;
+  text-indent: -1.5em;
+}
+.liturgy-spacer {
+  height: 0.65em;
 }
 
 /* ── Form inputs ── */
@@ -482,7 +494,7 @@ body {
 .print-item { margin-bottom: 20px; }
 .print-item h3 { font-size: 1rem; color: #333; margin: 0 0 6px; }
 .print-item h4 { font-size: 0.95rem; color: #444; margin: 10px 0 4px; }
-.print-item pre { font-family: 'Georgia', serif; white-space: pre-wrap; margin: 4px 0; font-size: 0.93rem; line-height: 1.65; color: #222; }
+.print-item pre { font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, Georgia, serif; white-space: pre-wrap; margin: 4px 0; font-size: 0.93rem; line-height: 1.75; color: #222; }
 .print-item p { margin: 4px 0; font-size: 0.93rem; }
 .print-rubric { color: #b84a2e; font-style: italic; font-size: 0.85rem; }
 

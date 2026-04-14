@@ -876,29 +876,6 @@ export default function App() {
           {/* 5. Psalmi */}
           <div className="section-block">
             <SectionHeader num={5} title="Psalmi" />
-            <Rubric text="Psalmi voidaan laulaa tai lukea. Sen alussa ja lopussa voi olla antifoni." />
-
-            <label className="toggle-label">
-              <input
-                type="checkbox"
-                checked={sel.includeAntifoni}
-                onChange={e => update('includeAntifoni', e.target.checked)}
-              />
-              Sisällytetään antifoni
-            </label>
-
-            {sel.includeAntifoni && (
-              <>
-                <p className="subsection-label">Antifoni</p>
-                <SelectSection
-                  options={ANTIFONI}
-                  selected={sel.antifoni}
-                  onSelect={i => update('antifoni', i)}
-                />
-                <SelectedText text={ANTIFONI[sel.antifoni].text} />
-              </>
-            )}
-
             <label className="toggle-label">
               <input
                 type="checkbox"
@@ -907,9 +884,28 @@ export default function App() {
               />
               Sisällytetään psalmi
             </label>
-
             {sel.includePsalmi && (
               <>
+                <Rubric text="Psalmi voidaan laulaa tai lukea. Sen alussa ja lopussa voi olla antifoni." />
+                <label className="toggle-label">
+                  <input
+                    type="checkbox"
+                    checked={sel.includeAntifoni}
+                    onChange={e => update('includeAntifoni', e.target.checked)}
+                  />
+                  Sisällytetään antifoni
+                </label>
+                {sel.includeAntifoni && (
+                  <>
+                    <p className="subsection-label">Antifoni</p>
+                    <SelectSection
+                      options={ANTIFONI}
+                      selected={sel.antifoni}
+                      onSelect={i => update('antifoni', i)}
+                    />
+                    <SelectedText text={ANTIFONI[sel.antifoni].text} />
+                  </>
+                )}
                 <p className="subsection-label">Psalmi</p>
                 <SelectSection
                   options={PSALMIT}
@@ -917,24 +913,22 @@ export default function App() {
                   onSelect={i => update('psalmi', i)}
                 />
                 <SelectedText text={PSALMIT[sel.psalmi].text} />
+                <label className="toggle-label">
+                  <input
+                    type="checkbox"
+                    checked={sel.includePieniKunnia}
+                    onChange={e => update('includePieniKunnia', e.target.checked)}
+                  />
+                  Sisällytetään Pieni kunnia
+                </label>
+                {sel.includePieniKunnia && <SelectedText text={PIENI_KUNNIA} />}
+                {sel.includeAntifoni && (
+                  <div className="antifoni-repeat">
+                    <Rubric text="Antifoni toistetaan:" />
+                    <SelectedText text={ANTIFONI[sel.antifoni].text} />
+                  </div>
+                )}
               </>
-            )}
-
-            <label className="toggle-label">
-              <input
-                type="checkbox"
-                checked={sel.includePieniKunnia}
-                onChange={e => update('includePieniKunnia', e.target.checked)}
-              />
-              Sisällytetään Pieni kunnia
-            </label>
-            {sel.includePieniKunnia && <SelectedText text={PIENI_KUNNIA} />}
-
-            {sel.includeAntifoni && (
-              <div className="antifoni-repeat">
-                <Rubric text="Antifoni toistetaan:" />
-                <SelectedText text={ANTIFONI[sel.antifoni].text} />
-              </div>
             )}
           </div>
 

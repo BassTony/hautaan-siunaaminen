@@ -546,6 +546,7 @@ body {
   .app-footer, .meditation-note { display: none !important; }
 
   body { background: #fff !important; color: #222 !important; font-size: 11pt; }
+  .app, .app-header { display: none !important; }
   .print-overlay { position: static; overflow: visible; background: #fff !important; }
   .print-content { padding: 0; max-width: 100%; background: #fff !important; color: #222 !important; }
   .print-title { font-size: 18pt; }

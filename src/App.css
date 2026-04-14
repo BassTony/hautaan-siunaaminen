@@ -561,7 +561,7 @@ body {
   .card { padding: 14px 12px; }
   .section-block { margin-bottom: 20px; padding-bottom: 16px; }
 
-  .field-row { flex-direction: column; gap: 6px; margin-bottom: 8px; }
+  .field-row { flex-direction: column; gap: 2px; margin-bottom: 12px; }
 
   .mode-toggle { max-width: 100%; }
 

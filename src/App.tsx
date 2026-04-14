@@ -16,6 +16,7 @@ import type { ClassicalPiece } from './data/classicalMusic';
 import { conjugateDisplayName } from './utils/finnishConjugation';
 import { applyNameForms } from './utils/textUtils';
 import { loadSaves, saveFile, deleteSave, autoSave, loadAutoSave } from './utils/storage';
+import { buildShareUrl, decodeSelectionsFromUrl, clearShareParam } from './utils/urlShare';
 
 // ─── Default selections ───────────────────────────────────────────────────────
 
@@ -613,6 +614,11 @@ export default function App() {
   }, [dark]);
 
   const [sel, setSel] = useState<LiturgySelections>(() => {
+    const fromUrl = decodeSelectionsFromUrl();
+    if (fromUrl) {
+      clearShareParam();
+      return { ...DEFAULT, ...fromUrl };
+    }
     const saved = loadAutoSave();
     // Merge with DEFAULT so any fields missing from older saves get a default value
     return saved ? { ...DEFAULT, ...saved } : DEFAULT;
@@ -620,6 +626,7 @@ export default function App() {
   const [saves, setSaves] = useState<SaveFile[]>(() => loadSaves());
   const [showPrint, setShowPrint] = useState(false);
   const [showSaveDialog, setShowSaveDialog] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   // Auto-save on every change
   useEffect(() => {
@@ -632,6 +639,14 @@ export default function App() {
     },
     [],
   );
+
+  const handleShare = useCallback(() => {
+    const url = buildShareUrl(sel);
+    navigator.clipboard.writeText(url).then(() => {
+      setShareCopied(true);
+      setTimeout(() => setShareCopied(false), 2000);
+    });
+  }, [sel]);
 
   const fullName = [sel.firstNames, sel.lastName].filter(Boolean).join(' ');
 
@@ -692,6 +707,9 @@ export default function App() {
             </button>
             <button className="btn-secondary" onClick={() => setShowSaveDialog(true)}>
               Tallenna / lataa
+            </button>
+            <button className="btn-secondary" onClick={handleShare}>
+              {shareCopied ? 'Kopioitu!' : 'Jaa linkki'}
             </button>
             <button className="btn-primary" onClick={() => setShowPrint(true)}>
               Esikatsele / tulosta
